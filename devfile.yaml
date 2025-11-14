@@ -12,14 +12,12 @@ metadata:
   provider: Red Hat
   language: Python
   icon: https://raw.githubusercontent.com/devfile-samples/devfile-stack-icons/main/python.svg
-
 starterProjects:
   - name: flask-example
     description: Flask is a web framework, it’s a Python module that lets you develop web applications easily.
     git:
       remotes:
         origin: https://github.com/devfile-samples/python-ex
-
 components:
   - name: py
     container:
@@ -38,11 +36,26 @@ components:
         - -f
         - /dev/null
 
+  - name: segmentanything-image
+    image:
+      imageName: my-python-image
+      dockerfile:
+        uri: ./Dockerfile
+
 commands:
   - id: pip-install-requirements
-    exec:                                      # Hier wird die "exec"-Anweisung richtig definiert
+    exec:
       component: py
       commandLine: pip install -r requirements.txt
+      workingDir: ${PROJECT_SOURCE}
+      group:
+        kind: build
+        isDefault: false
+
+  - id: build-image
+    exec:
+      component: segmentanything-image
+      commandLine: build
       workingDir: ${PROJECT_SOURCE}
       group:
         kind: build
