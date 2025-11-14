@@ -5,3 +5,4 @@ Pillow
 segment_anything
 opencv-python
 numpy==1.24.4
+python3-distutils
