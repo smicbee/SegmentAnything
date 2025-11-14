@@ -1,4 +1,3 @@
-pydistutils
 flask
 torch
 torchvision
