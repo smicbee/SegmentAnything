@@ -19,28 +19,11 @@ starterProjects:
       remotes:
         origin: https://github.com/devfile-samples/python-ex
 components:
-  - name: py
-    container:
-      image: registry.access.redhat.com/ubi9/python-39:1-1743091356
-      mountSources: true
-      endpoints:
-        - name: port-5000-http
-          targetPort: 5000
-          exposure: public
-          protocol: https
-      env:
-        - name: DEBUG_PORT
-          value: "5858"
-      args:
-        - tail
-        - -f
-        - /dev/null
-
   - name: segmentanything-image
     image:
       imageName: my-python-image
       dockerfile:
-        uri: ./Dockerfile
+        uri: ./dockerfile
 
 commands:
   - id: pip-install-requirements
