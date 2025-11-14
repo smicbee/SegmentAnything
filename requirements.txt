@@ -4,5 +4,4 @@ torch
 torchvision
 Pillow
 segment_anything
-numpy==1.24.4
 opencv-python-headless
