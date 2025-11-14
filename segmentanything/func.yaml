@@ -1,0 +1,5 @@
+created: 2025-11-14T16:00:20.3161118+01:00
+image: docker.io/beetz/segmentanything:latest
+name: segmentanything
+runtime: python
+specVersion: 0.36.0
