@@ -26,15 +26,7 @@ components:
         uri: ./dockerfile
 
 commands:
-  - id: pip-install-requirements
-    exec:
-      component: py
-      commandLine: pip install -r requirements.txt
-      workingDir: ${PROJECT_SOURCE}
-      group:
-        kind: build
-        isDefault: false
-
+ 
   - id: build-image
     exec:
       component: segmentanything-image
@@ -43,6 +35,15 @@ commands:
       group:
         kind: build
         isDefault: true
+
+  - id: pip-install-requirements
+    exec:
+      component: segmentanything-image
+      commandLine: pip install -r requirements.txt
+      workingDir: ${PROJECT_SOURCE}
+      group:
+        kind: build
+        isDefault: false
 
   - id: run-app
     exec:
