@@ -7,6 +7,34 @@ import torch
 import base64
 from io import BytesIO
 import os
+import requests
+
+print("Init Segment-Anything API for iFAcet")
+
+# Dateipfad zur Datei
+file_path = "./model/sam_vit_b_01ec64.pth"
+# URL der Datei
+url = "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth"
+
+# Überprüfen, ob die Datei existiert
+if not os.path.exists(file_path):
+    print("Model nicht vorhanden. Downloade snapshot...")
+    response = requests.get(url, stream=True)
+    
+    # Sicherstellen, dass der Download erfolgreich war
+    if response.status_code == 200:
+        # Verzeichnis erstellen, falls es nicht existiert
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        
+        # Datei speichern
+        with open(file_path, "wb") as f:
+            f.write(response.content)
+        print(f"Datei {file_path} wurde erfolgreich heruntergeladen.")
+    else:
+        print(f"Fehler beim Herunterladen der Datei. Status Code: {response.status_code}")
+else:
+    print("Datei ist bereits vorhanden.")
+
 
 # Flask-App initialisieren
 app = Flask(__name__)

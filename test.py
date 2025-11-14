@@ -3,10 +3,10 @@ import requests
 import json
 
 # Pfad zum Bild, das du testen möchtest
-image_path = "test-images/SEM front_002.tif"
+image_path = "test-images/test.jpg"
 
 # API-Endpunkt
-url = "https://segmentanything-app.eu-de-7.icp.infineon.com:5000/segment"
+url = "https://segment-anything-imagelabeling.eu-de-7.icp.infineon.com:5000/segment"
 
 # Punkte und Labels für die Segmentierung (verschiedene Testdaten möglich)
 input_data = {
