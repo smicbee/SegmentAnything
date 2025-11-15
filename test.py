@@ -6,7 +6,7 @@ import json
 image_path = "test-images/test.jpg"
 
 # API-Endpunkt
-url = "https://segment-anything-imagelabeling.eu-de-7.icp.infineon.com:5000/segment"
+url = "http://segment-anything-imagelabeling.eu-de-7.icp.infineon.com/segment"
 
 # Punkte und Labels für die Segmentierung (verschiedene Testdaten möglich)
 input_data = {
@@ -37,6 +37,7 @@ def send_request_to_api(image_path, endpoint, points, labels):
         headers = {"Content-Type": "application/json"}
         response = requests.post(endpoint, data=json.dumps(payload), headers=headers)
 
+        print(json.dumps(payload))
         # Antwort der API anzeigen
         print("Status Code:", response.status_code)
         print("Antwort JSON:", response.json())  # Zeigt theoretisch auch die Maske

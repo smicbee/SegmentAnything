@@ -1,63 +1,110 @@
-schemaVersion: 2.2.2
+kind: BuildConfig
+apiVersion: build.openshift.io/v1
 metadata:
-  name: segmentanything
-  version: 2.2.0
-  displayName: Python
-  description: Python (version 3.9.x) is an interpreted, object-oriented, high-level programming language
-  tags:
-    - Python
-    - Pip
-    - Flask
-  projectType: Python
-  provider: Red Hat
-  language: Python
-  icon: https://raw.githubusercontent.com/devfile-samples/devfile-stack-icons/main/python.svg
-starterProjects:
-  - name: flask-example
-    description: Flask is a web framework, it’s a Python module that lets you develop web applications easily.
+  annotations:
+    app.openshift.io/vcs-ref: ''
+    app.openshift.io/vcs-uri: 'https://github.com/smicbee/SegmentAnything.git'
+    openshift.io/generated-by: OpenShiftWebConsole
+  resourceVersion: '4299789080'
+  name: segment-anything
+  uid: 0f030c00-dae5-4326-9de3-dc49996bf950
+  creationTimestamp: '2025-11-14T22:39:00Z'
+  generation: 2
+  managedFields:
+    - manager: Mozilla
+      operation: Update
+      apiVersion: build.openshift.io/v1
+      time: '2025-11-14T22:39:00Z'
+      fieldsType: FieldsV1
+      fieldsV1:
+        'f:metadata':
+          'f:annotations':
+            .: {}
+            'f:app.openshift.io/vcs-ref': {}
+            'f:app.openshift.io/vcs-uri': {}
+            'f:openshift.io/generated-by': {}
+          'f:labels':
+            .: {}
+            'f:app': {}
+            'f:app.kubernetes.io/component': {}
+            'f:app.kubernetes.io/instance': {}
+            'f:app.kubernetes.io/name': {}
+            'f:app.kubernetes.io/part-of': {}
+            'f:app.openshift.io/runtime': {}
+            'f:app.openshift.io/runtime-version': {}
+        'f:spec':
+          'f:output':
+            'f:to': {}
+          'f:runPolicy': {}
+          'f:source':
+            'f:contextDir': {}
+            'f:git':
+              .: {}
+              'f:uri': {}
+            'f:type': {}
+          'f:strategy':
+            'f:sourceStrategy':
+              .: {}
+              'f:from': {}
+            'f:type': {}
+          'f:triggers': {}
+    - manager: openshift-apiserver
+      operation: Update
+      apiVersion: build.openshift.io/v1
+      time: '2025-11-14T22:39:00Z'
+      fieldsType: FieldsV1
+      fieldsV1:
+        'f:status':
+          'f:imageChangeTriggers': {}
+          'f:lastVersion': {}
+  namespace: imagelabeling
+  labels:
+    app: segment-anything
+    app.kubernetes.io/component: segment-anything
+    app.kubernetes.io/instance: segment-anything
+    app.kubernetes.io/name: segment-anything
+    app.kubernetes.io/part-of: segment-anything-app
+    app.openshift.io/runtime: ifx-base-python
+    app.openshift.io/runtime-version: 3.9-ubi8
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: 'segment-anything:latest'
+  resources: {}
+  successfulBuildsHistoryLimit: 5
+  failedBuildsHistoryLimit: 5
+  strategy:
+    type: Source
+    sourceStrategy:
+      from:
+        kind: ImageStreamTag
+        namespace: openshift
+        name: 'ifx-base-python:3.9-ubi8'
+  postCommit: {}
+  source:
+    type: Git
     git:
-      remotes:
-        origin: https://github.com/devfile-samples/python-ex
-components:
-  - name: segmentanything-image
-    image:
-      imageName: my-python-image
-      dockerfile:
-        uri: ./dockerfile
-
-commands:
- 
-  - id: build-image
-    exec:
-      component: segmentanything-image
-      commandLine: build
-      workingDir: ${PROJECT_SOURCE}
-      group:
-        kind: build
-        isDefault: true
-
-  - id: pip-install-requirements
-    exec:
-      component: segmentanything-image
-      commandLine: pip install -r requirements.txt
-      workingDir: ${PROJECT_SOURCE}
-      group:
-        kind: build
-        isDefault: false
-
-  - id: run-app
-    exec:
-      component: py
-      commandLine: python app.py
-      workingDir: ${PROJECT_SOURCE}
-      group:
-        kind: run
-        isDefault: true
-
-  - id: debug-py
-    exec:
-      component: py
-      commandLine: pip install debugpy && python -m debugpy --listen 0.0.0.0:${DEBUG_PORT} app.py
-      workingDir: ${PROJECT_SOURCE}
-      group:
-        kind: debug
+      uri: 'https://github.com/smicbee/SegmentAnything.git'
+    contextDir: /
+  triggers:
+    - type: Generic
+      generic:
+        secretReference:
+          name: segment-anything-generic-webhook-secret
+    - type: GitHub
+      github:
+        secretReference:
+          name: segment-anything-github-webhook-secret
+    - type: ImageChange
+      imageChange: {}
+    - type: ConfigChange
+  runPolicy: Serial
+status:
+  lastVersion: 1
+  imageChangeTriggers:
+    - lastTriggeredImageID: 'dockerregistry-v2.vih.infineon.com/ifx-base-python@sha256:5d2752c1d86732911d3177206ee3926d5eb37571083023aff873a64728f2dd44'
+      from:
+        namespace: openshift
+        name: 'ifx-base-python:3.9-ubi8'
+      

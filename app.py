@@ -110,7 +110,7 @@ def segment_image():
     try:
         contours, _ = cv2.findContours(mask_data, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)  # Konturen finden
         largest_contour = max(contours, key=cv2.contourArea)  # Größte Kontur auswählen
-        epsilon = 0.01 * cv2.arcLength(largest_contour, True)  # Proportionaler Toleranzwert
+        epsilon = 0.001 * cv2.arcLength(largest_contour, True)  # Proportionaler Toleranzwert
         approx_polygon = cv2.approxPolyDP(largest_contour, epsilon, True)  # Polygon vereinfachen
         polygon_points = approx_polygon[:, 0, :].tolist()  # Polygonpunkte extrahieren (x, y)
     except Exception as e:
