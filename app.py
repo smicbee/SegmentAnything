@@ -125,6 +125,62 @@ def segment_image():
     })
 
 
+
+
+@app.route("/segment_all", methods=["POST"])
+def segment_all():
+    """
+    Segmentiert das gesamte Bild und gibt alle gefundenen Objekte zurück.
+    """
+    try:
+        data = request.get_json()
+        image_base64 = data.get("image")
+        if not image_base64:
+            return jsonify({"error": "Kein Bild im Request vorhanden"}), 400
+
+        # Bild dekodieren
+        image_data = base64.b64decode(image_base64)
+        image = Image.open(BytesIO(image_data)).convert("RGB")
+        image_np = np.asarray(image, dtype=np.uint8)
+
+        predictor.set_image(image_np)
+
+        # Fülle das gesamte Bild mit Abfragen (Etwa 32 Punkte automatisch platzieren)
+        height, width, _ = image_np.shape
+        grid_points = np.array(
+            [[x, y] for y in np.linspace(0, height - 1, 32).astype(int) for x in np.linspace(0, width - 1, 32).astype(int)]
+        )
+        labels = np.ones(len(grid_points))  # Alle Punkte werden als Vordergrund behandelt
+
+        masks, scores, _ = predictor.predict(
+            point_coords=grid_points,
+            point_labels=labels,
+            multimask_output=True  # Mehrere Masken als Ausgabe
+        )
+    except Exception as e:
+        return jsonify({"error": f"Fehler bei der Bildsegmentierung: {str(e)}"}), 500
+
+    all_masks = []
+    try:
+        for i, mask in enumerate(masks):
+            mask_data = (mask * 255).astype(np.uint8)
+            mask_image = Image.fromarray(mask_data)
+            buffer = BytesIO()
+            mask_image.save(buffer, format="PNG")
+            mask_base64 = base64.b64encode(buffer.getvalue()).decode()
+
+            all_masks.append({
+                "mask": mask_base64,
+                "score": float(scores[i])
+            })
+    except Exception as e:
+        return jsonify({"error": f"Fehler beim Verarbeiten der Masken: {str(e)}"}), 500
+
+    return jsonify({
+        "status": "success",
+        "masks": all_masks
+    })
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
