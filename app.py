@@ -2,12 +2,13 @@ from flask import Flask, request, jsonify
 from PIL import Image
 import numpy as np
 import cv2  # Für Konturberechnung
-from segment_anything import sam_model_registry, SamPredictor
+from segment_anything import sam_model_registry, SamPredictor, SamAutomaticMaskGenerator
 import torch
 import base64
 from io import BytesIO
 import os
 import requests
+
 
 print("Init Segment-Anything API for iFAcet")
 
@@ -42,12 +43,15 @@ app = Flask(__name__)
 # Geräte wählen (GPU oder CPU)
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
+print("Device used: " + device)
+
 # SAM-Modell laden
 model_path = "./model/sam_vit_b_01ec64.pth"
 print(f"Lade SAM-Modell von: {model_path}")
 sam = sam_model_registry["vit_b"](checkpoint=model_path)
 sam.to(device=device)
 predictor = SamPredictor(sam)
+mask_generator = SamAutomaticMaskGenerator(sam)
 
 @app.route("/segment", methods=["POST"])
 def segment_image():
@@ -143,36 +147,35 @@ def segment_all():
         image = Image.open(BytesIO(image_data)).convert("RGB")
         image_np = np.asarray(image, dtype=np.uint8)
 
-        predictor.set_image(image_np)
+        masks = mask_generator.generate(image_np)   
 
-        # Fülle das gesamte Bild mit Abfragen (Etwa 32 Punkte automatisch platzieren)
-        height, width, _ = image_np.shape
-        grid_points = np.array(
-            [[x, y] for y in np.linspace(0, height - 1, 32).astype(int) for x in np.linspace(0, width - 1, 32).astype(int)]
-        )
-        labels = np.ones(len(grid_points))  # Alle Punkte werden als Vordergrund behandelt
-
-        masks, scores, _ = predictor.predict(
-            point_coords=grid_points,
-            point_labels=labels,
-            multimask_output=True  # Mehrere Masken als Ausgabe
-        )
     except Exception as e:
         return jsonify({"error": f"Fehler bei der Bildsegmentierung: {str(e)}"}), 500
 
     all_masks = []
     try:
-        for i, mask in enumerate(masks):
-            mask_data = (mask * 255).astype(np.uint8)
-            mask_image = Image.fromarray(mask_data)
-            buffer = BytesIO()
-            mask_image.save(buffer, format="PNG")
-            mask_base64 = base64.b64encode(buffer.getvalue()).decode()
-
-            all_masks.append({
-                "mask": mask_base64,
-                "score": float(scores[i])
-            })
+      for i, mask in enumerate(masks):
+        mask_array = mask["segmentation"]  # Hole die eigentliche Maske
+        mask_data = (mask_array * 255).astype(np.uint8)  # Binärmaske erstellen
+        mask_image = Image.fromarray(mask_data)  # Maske in ein Bild umwandeln
+        buffer = BytesIO()
+        mask_image.save(buffer, format="PNG")
+        mask_base64 = base64.b64encode(buffer.getvalue()).decode()
+        
+        # Polygon erstellen
+        try:
+            contours, _ = cv2.findContours(mask_data, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)  # Konturen finden
+            largest_contour = max(contours, key=cv2.contourArea)  # Größte Kontur auswählen
+            epsilon = 0.001 * cv2.arcLength(largest_contour, True)  # Proportionaler Toleranzwert
+            approx_polygon = cv2.approxPolyDP(largest_contour, epsilon, True)  # Polygon vereinfachen
+            polygon_points = approx_polygon[:, 0, :].tolist()  # Polygonpunkte extrahieren (x, y)
+        except Exception as e:
+            return jsonify({"error": f"Fehler beim Berechnen des Polygons: {str(e)}"}), 500
+        
+        all_masks.append({
+            #"mask": mask_base64,
+            "polygon": polygon_points
+        })
     except Exception as e:
         return jsonify({"error": f"Fehler beim Verarbeiten der Masken: {str(e)}"}), 500
 
